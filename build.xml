@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     2012/01/26 16:31:05                                                        
+
+     ScienceDesign GUI    
+     GUI library
+                   
+     Higuchi Ryusuke                                                                
+     ====================================================================== -->
+<project name="scid-gui" default="compile" xmlns:ivy="antlib:org.apache.ivy.ant">
+    <description>
+            SciendeDesign GUI library
+    </description>
+
+    <property file="project/build.properties"/>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: init                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="init">
+    </target>
+
+    <!-- ================================= 
+          target: clean              
+         ================================= -->
+    <target name="clean" description="clean the project">
+        <delete includeemptydirs="true" dir="${build.dir}"/>
+    </target>
+
+    <!-- ================================= 
+          target: Resolve dependency              
+         ================================= -->
+    <target name="resolve" description="resolve dependencies with ivy">
+        <ivy:resolve file="${ivy.file}"/>
+
+        <!-- Class Paths -->
+        <ivy:cachepath pathid="lib.compile.classpath" conf="compile" />
+        <ivy:cachepath pathid="lib.test.classpath" conf="test" />
+    </target>
+
+    <!-- ================================= 
+          target: compile              
+         ================================= -->
+    <target name="compile" depends="init, resolve" description="compile the project">
+        <mkdir dir="${classes.main.dir}"/>
+
+        <javac destdir="${classes.main.dir}" source="${source}" target="${target}"
+                encoding="UTF-8" debug="true" includeantruntime="false">
+            <compilerarg value="-Xlint:unchecked"/>
+            <src path="${src.main.java.dir}" />
+            <classpath refid="lib.compile.classpath" />
+        </javac>
+    </target>
+
+    <!-- ================================= 
+          target: create jar file              
+         ================================= -->
+    <target name="package" depends="version, compile" description="make a jar file for this project">
+        <jar destfile="${package.file}">
+            <fileset dir="${classes.main.dir}" />
+            <!-- <fileset dir="${src.main.resources.dir}" /> -->
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+                <attribute name="Build-Version" value="${version}" />
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- ================================= 
+           target: publish-local
+          ================================= -->
+    <target name="publish-local" depends="clean, local-version, package"
+            description="publish this project in the local ivy repository">
+        <ivy:publish artifactspattern="${build.dir}/[artifact].[ext]"
+            resolver="local"
+            pubrevision="${version}"
+            pubdate="${now}"
+            status="integration"
+            forcedeliver="true">
+        </ivy:publish>
+        <echo message="project ${ant.project.name} published locally with version ${version}" />
+    </target>
+
+    <!-- ================================= 
+      target: clean-local              
+     ================================= -->
+    <target name="clean-local" description="cleans the local repository for the current module">
+        <ivy:info file="${ivy.file}" />
+        <delete dir="${ivy.local.default.root}/${ivy.organisation}/${ivy.module}" />
+    </target>
+
+    <!-- ================================= 
+          target: publish              
+         ================================= -->
+    <target name="publish" depends="clean, package" description="publish this project in the ivy repository">
+        <ivy:publish
+            artifactspattern="${build.dir}/[artifact].[ext]"
+            resolver="shared"
+            pubrevision="${version}"
+            status="release" />
+        <echo message="project ${ant.project.name} released with version ${version}" />
+    </target>
+
+    <target name="ivy-new-version" unless="ivy.new.revision">
+        <!-- default module version prefix value -->
+        <property name="module.version.prefix" value="${module.version.target}-dev-b" />
+
+        <!-- asks to ivy an available version number -->
+        <ivy:info file="${ivy.file}" />
+        <ivy:buildnumber
+            organisation="${ivy.organisation}" module="${ivy.module}"
+            revision="${module.version.prefix}" defaultBuildNumber="1" revSep="" />
+    </target>
+
+    <target name="local-version">
+        <tstamp>
+            <format property="now" pattern="yyyyMMddHHmmss" />
+        </tstamp>
+        <property name="ivy.new.revision" value="${module.version.target}-local-${now}" />
+    </target>
+
+    <target name="version" depends="ivy-new-version">
+        <!-- create version file in classpath for later inclusion in jar -->
+        <mkdir dir="${classes.main.dir}" />
+        <echo message="version=${ivy.new.revision}"
+            file="${classes.main.dir}/${ant.project.name}.properties" append="false" />
+
+        <!-- load generated version properties file -->
+        <property file="${classes.main.dir}/${ant.project.name}.properties" />
+    </target>
+</project>
+
