@@ -37,6 +37,7 @@ public class NonNullValueModel<T> extends AbstractMutableValueModel<T> {
     NullValueSettingStrategy nullValueSettingStrategy = NullValueSettingStrategy.IGNORE;
     
     public NonNullValueModel(T defaultValue) {
+        super(defaultValue);
         if (defaultValue == null)
             throw new IllegalArgumentException("initialValue must not be null");
         

@@ -42,6 +42,11 @@ public abstract class AbstractValueModel<T> implements ValueModel<T> {
         }
     }
     
+    @Override
+    public String toString() {
+        return String.valueOf(get());
+    }
+    
     static class ValueChangeEvent extends ChangeEvent {
         private final Object oldValue;
         private final Object newValue;
@@ -66,6 +71,13 @@ public abstract class AbstractValueModel<T> implements ValueModel<T> {
 abstract class AbstractMutableValueModel<T> extends AbstractValueModel<T> implements MutableValueModel<T> {
     T value;
     
+    protected AbstractMutableValueModel(T value) {
+        this.value = value;
+    }
+    
+    protected AbstractMutableValueModel() {
+    }
+
     @Override
     public T get() {
         return value;

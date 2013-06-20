@@ -22,6 +22,7 @@ public abstract class ValueModelAdapter<T, S> extends AbstractValueModel<T> impl
         this();
         if (subject == null) throw new IllegalArgumentException("subject must not be null");
         
+        this.subject = subject;
         installUpdateListener(subject);
     }
     

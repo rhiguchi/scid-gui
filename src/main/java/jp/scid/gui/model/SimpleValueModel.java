@@ -7,7 +7,6 @@ package jp.scid.gui.model;
  * @param <T> 値の型。
  */
 public class SimpleValueModel<T> extends AbstractMutableValueModel<T> {
-    private T value = null;
     
     /**
      * 定義された値を持たないモデルを構成する。 
@@ -20,11 +19,6 @@ public class SimpleValueModel<T> extends AbstractMutableValueModel<T> {
      * @param initialValue このモデルの初期値。
      */
     public SimpleValueModel(T initialValue) {
-        this.value = initialValue;
-    }
-
-    @Override
-    public String toString() {
-        return "ValueModel [value=" + value + "]";
+        super(initialValue);
     }
 }
