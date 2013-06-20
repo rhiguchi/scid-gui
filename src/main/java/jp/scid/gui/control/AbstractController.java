@@ -2,6 +2,7 @@ package jp.scid.gui.control;
 
 import static java.lang.String.*;
 
+import java.beans.Expression;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.Statement;
@@ -144,6 +145,19 @@ public abstract class AbstractController<M> {
         catch (Exception e) {
             throw new IllegalStateException(format(
                     "Cannot execute %s on an object for %s", methodName, target.getClass()), e);
+        }
+    }
+
+    static Object getBeanPropertyValue(Object model, String property) {
+        String methodName = AbstractController.getGetterName(property);
+        Expression statement = new Expression(model, methodName, null);
+        
+        try {
+            return statement.getValue();
+        }
+        catch (Exception e) {
+            throw new IllegalStateException(format(
+                    "Cannot execute %s to an object for %s", methodName, model.getClass()), e);
         }
     }
     
