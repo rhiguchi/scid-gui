@@ -58,7 +58,7 @@ abstract class ValueModelValueAdapter<T, S> extends ValueModelAdapter<T, Mutable
      * {@link MutableValueModel} の {@code value} 値の変化を監視する。
      */
     @Override
-    final void installUpdateListener(MutableValueModel<S> newSubject) {
+    protected final void installUpdateListener(MutableValueModel<S> newSubject) {
         newSubject.addValueChangeListener(changeListener);
     }
     
@@ -66,7 +66,7 @@ abstract class ValueModelValueAdapter<T, S> extends ValueModelAdapter<T, Mutable
      * この {@link MutableValueModel} の変化監視を停止する。
      */
     @Override
-    final void uninstallUpdateListener(MutableValueModel<S> newSubject) {
+    protected final void uninstallUpdateListener(MutableValueModel<S> newSubject) {
         newSubject.removeValueChangeListener(changeListener);
     }
 }

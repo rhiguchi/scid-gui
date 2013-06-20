@@ -34,12 +34,12 @@ public class DocumentTextModel extends ValueModelAdapter<String, Document> {
     }
     
     @Override
-    void installUpdateListener(Document newSubject) {
+    protected void installUpdateListener(Document newSubject) {
         newSubject.addDocumentListener(documentListener);
     }
     
     @Override
-    void uninstallUpdateListener(Document newSubject) {
+    protected void uninstallUpdateListener(Document newSubject) {
         newSubject.removeDocumentListener(documentListener);
     }
     

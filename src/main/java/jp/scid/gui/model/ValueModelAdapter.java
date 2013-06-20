@@ -114,12 +114,12 @@ public abstract class ValueModelAdapter<T, S> extends AbstractValueModel<T> impl
      * 
      * @param subject あたらしい主題値。
      */
-    abstract void installUpdateListener(S subject);
+    protected abstract void installUpdateListener(S subject);
     
     /**
      * 主題値の監視をやめる処理を行う。
      * 
      * @param subject 監視をやめる主題値。
      */
-    abstract void uninstallUpdateListener(S subject);
+    protected abstract void uninstallUpdateListener(S subject);
 }

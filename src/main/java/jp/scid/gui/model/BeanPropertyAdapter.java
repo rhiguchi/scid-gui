@@ -29,12 +29,12 @@ public class BeanPropertyAdapter extends ValueModelAdapter<Object, Object> imple
     }
 
     @Override
-    void installUpdateListener(Object newSubject) {
+    protected void installUpdateListener(Object newSubject) {
         execute(newSubject, "addPropertyChangeListener", this);
     }
 
     @Override
-    void uninstallUpdateListener(Object newSubject) {
+    protected void uninstallUpdateListener(Object newSubject) {
         execute(newSubject, "removePropertyChangeListener", this);
     }
 
