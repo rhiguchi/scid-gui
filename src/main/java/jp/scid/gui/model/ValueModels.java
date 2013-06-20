@@ -1,7 +1,5 @@
 package jp.scid.gui.model;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.List;
 
@@ -14,18 +12,14 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import jp.scid.genomemuseum.gui.ListController;
-import jp.scid.gui.model.Transformers.BooleanElementValue;
-import jp.scid.gui.model.Transformers.CollectionSelector;
-import jp.scid.gui.model.Transformers.StringFormatter;
+import jp.scid.gui.model.connector.ValueConnector;
+import jp.scid.gui.model.connector.ValueModelConnector;
 
 public class ValueModels {
-    private final static Transformers t = new Transformers();
-    
     private ValueModels() {
     }
     
-    public static <T> ValueModel<T> newNullableValueModel() {
+    public static <T> MutableValueModel<T> newNullableValueModel() {
         return new SimpleValueModel<T>();
     }
     
@@ -48,35 +42,32 @@ public class ValueModels {
     public static ValueModel<Object> newTreeSelectedNodeObject(TreeSelectionModel model) {
         TreeSelectedNodeConnector connector = new TreeSelectedNodeConnector();
         connector.setSource(model);
-        return connector.getValueModel();
+        return connector.getTargetModel();
     }
 
     public static ValueModel<Boolean> newInstanceCheckModel(ValueModel<? extends Object> base, Class<?> testClass) {
         InstanceMatchConnector conn = new InstanceMatchConnector(testClass);
         conn.setSource(base);
-        return conn.getValueModel();
+        return conn.getTargetModel();
     }
     
-    public static <T> ValueModel<Boolean> newSelectionBooleanModel(ValueModel<T> adaptee, T selectionValue) {
-        CollectionSelector selector = new CollectionSelector(selectionValue);
-        BooleanElementValue<T> trueTransformer = new BooleanElementValue<T>(selectionValue);
-        TransformValueModel<T, Boolean> valueModel = new TransformValueModel<T, Boolean>(selector, trueTransformer);
-        valueModel.setSubject(adaptee);
-        return valueModel;
+    public static <T> MutableValueModel<Boolean> newSelectionBooleanModel(MutableValueModel<T> adaptee, T selectionValue) {
+        ElementSelectAdapter<T> adapter = new ElementSelectAdapter<T>(selectionValue);
+        adapter.setSubject(adaptee);
+        return adapter;
     }
     
     public static ValueModel<Boolean> newNegationBooleanModel(ValueModel<Boolean> adaptee) {
-        TransformValueModel<Boolean, Boolean> model = new TransformValueModel<Boolean, Boolean>(t.getBooleanNegator()); 
-        model.setSubject(adaptee);
-        return model; 
+        ValueModelConnector<Boolean, Boolean> connector =
+                ValueModelConnector.newValueMatchConnector(Collections.singleton(Boolean.FALSE));
+        connector.setSource(adaptee);
+        return connector.getTargetModel(); 
     }
     
     public static <T> ValueModel<String> newFormatStringModel(ValueModel<T> adaptee, String format) {
-        StringFormatter transformer = new StringFormatter(format);
-        TransformValueModel<T, String> model = new TransformValueModel<T, String>(transformer); 
-        model.setSubject(adaptee);
-        
-        return model; 
+        ValueModelConnector<String, T> connector = ValueModelConnector.newFormatStringConnector(format);
+        connector.setSource(adaptee);
+        return connector.getTargetModel(); 
     }
     
     public static ValueModel<Boolean> newListElementsExistenceModel(ListModel source) {
@@ -84,13 +75,13 @@ public class ValueModels {
         adapter.setSource(source);
         
         NumberThresholdModel<Integer> model = new NumberThresholdModel<Integer>(0);
-        model.setSource(adapter.getValueModel());
+        model.setSource(adapter.getTargetModel());
         
-        return model.getValueModel();
+        return model.getTargetModel();
     }
     
-    static class ListCountModelAdapter extends ValueModelConnector<Integer, ListModel> implements ListDataListener {
-        public ListCountModelAdapter(ValueModel<Integer> target) {
+    static class ListCountModelAdapter extends ValueConnector<Integer, ListModel> implements ListDataListener {
+        public ListCountModelAdapter(MutableValueModel<Integer> target) {
             super(target);
         }
         
@@ -101,32 +92,32 @@ public class ValueModels {
 
         @Override
         public void intervalAdded(ListDataEvent e) {
-            updateModelValue();
+            sourceChange((ListModel) e.getSource());
         }
         
         @Override
         public void intervalRemoved(ListDataEvent e) {
-            updateModelValue();
+            sourceChange((ListModel) e.getSource());
         }
         
         @Override
         public void contentsChanged(ListDataEvent e) {
-            updateModelValue();
+            sourceChange((ListModel) e.getSource());
         }
         
         @Override
-        protected void installSourceChangeListener(ListModel source) {
+        protected void installUpdateListener(ListModel source) {
             source.addListDataListener(this);
         }
         
         @Override
-        protected void uninstallSourceChangeListener(ListModel source) {
+        protected void uninstallUpdateListener(ListModel source) {
             source.removeListDataListener(this);
         }
     }
 }
 
-class NumberThresholdModel<T extends Number & Comparable<T>> extends ValueModelValueConnector<Boolean, T> {
+class NumberThresholdModel<T extends Number & Comparable<T>> extends ValueModelConnector<Boolean, T> {
     private final T thresholdValue;
     
     public NumberThresholdModel(T thresholdValue) {
@@ -142,7 +133,7 @@ class NumberThresholdModel<T extends Number & Comparable<T>> extends ValueModelV
     }
 }
 
-class InstanceMatchConnector extends ValueModelValueConnector<Boolean, Object> {
+class InstanceMatchConnector extends ValueModelConnector<Boolean, Object> {
     private Class<?> testClass;
     
     public InstanceMatchConnector(Class<?> testClass) {
@@ -158,14 +149,14 @@ class InstanceMatchConnector extends ValueModelValueConnector<Boolean, Object> {
     }
 }
 
-class TreeSelectedNodeConnector extends ValueModelConnector<Object, TreeSelectionModel> implements TreeSelectionListener {
+class TreeSelectedNodeConnector extends ValueConnector<Object, TreeSelectionModel> implements TreeSelectionListener {
     public TreeSelectedNodeConnector() {
         super(ValueModels.newNullableValueModel());
     }
 
     @Override
     public void valueChanged(TreeSelectionEvent e) {
-        updateModelValue();
+        sourceChange((TreeSelectionModel) e.getSource());
     }
 
     @Override
@@ -181,87 +172,12 @@ class TreeSelectedNodeConnector extends ValueModelConnector<Object, TreeSelectio
     }
 
     @Override
-    protected void installSourceChangeListener(TreeSelectionModel source) {
+    protected void installUpdateListener(TreeSelectionModel source) {
         source.addTreeSelectionListener(this);
     }
 
     @Override
-    protected void uninstallSourceChangeListener(TreeSelectionModel source) {
+    protected void uninstallUpdateListener(TreeSelectionModel source) {
         source.removeTreeSelectionListener(this);
     }
-}
-
-abstract class ValueModelValueConnector<T, S> extends ValueModelConnector<T, ValueModel<? extends S>> implements PropertyChangeListener {
-
-    protected ValueModelValueConnector(ValueModel<T> target) {
-        super(target);
-    }
-
-    abstract protected T convertModelValue(S sourceValue);
-    
-    @Override
-    final protected T getModelValue(ValueModel<? extends S> source) {
-        return convertModelValue(source.getValue());
-    }
-    
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        updateModelValue();
-    }
-    
-    @Override
-    protected void installSourceChangeListener(ValueModel<? extends S> source) {
-        source.addPropertyChangeListener(this);
-    }
-
-    @Override
-    protected void uninstallSourceChangeListener(ValueModel<? extends S> source) {
-        source.removePropertyChangeListener(this);
-    }
-}
-
-abstract class ValueModelConnector<T, S> {
-    private final ValueModel<T> target;
-    private S source;
-
-    protected ValueModelConnector(ValueModel<T> target) {
-        if (target == null) throw new IllegalArgumentException("target must not be null");
-        this.target = target;
-    }
-    
-    public ValueModelConnector(T initialValue) {
-        this(ValueModels.newValueModel(initialValue));
-    }
-
-    public ValueModel<T> getValueModel() {
-        return target;
-    }
-
-    protected void setValue(T newValue) {
-        target.setValue(newValue);
-    }
-    
-    public void updateModelValue() {
-        T newValue = getModelValue(source);
-        setValue(newValue);
-    }
-    
-    abstract protected T getModelValue(S source);
-    
-    public void setSource(S source) {
-        if (this.source != null) {
-            uninstallSourceChangeListener(this.source);
-        }
-        
-        this.source = source;
-        updateModelValue();
-        
-        if (source != null) {
-            installSourceChangeListener(source);
-        }
-    }
-    
-    abstract protected void installSourceChangeListener(S source);
-    
-    abstract protected void uninstallSourceChangeListener(S source);
 }

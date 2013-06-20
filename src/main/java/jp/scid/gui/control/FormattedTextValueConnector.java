@@ -43,7 +43,7 @@ public class FormattedTextValueConnector<V> extends TextComponentValueConnector<
     public void disableIncrementCommit() {
         getView().getDocument().removeDocumentListener(this);
     }
-
+    
     @Override
     protected void updateView(JFormattedTextField target, V model) {
         target.setValue(model);

@@ -1,6 +1,6 @@
 package jp.scid.gui.model;
 
-public class NonNullValueModel<T> extends ValueHolder<T> {
+public class NonNullValueModel<T> extends AbstractMutableValueModel<T> {
     /**
      * {@code null} を設定しようとする時の振る舞い。
      * @author Ryusuke Higuchi
@@ -60,11 +60,6 @@ public class NonNullValueModel<T> extends ValueHolder<T> {
         if (nullValueSettingStrategy == null)
             throw new IllegalArgumentException("nullValueSettingStrategy must not be null");
         this.nullValueSettingStrategy = nullValueSettingStrategy;
-    }
-    
-    @Override
-    public final T get() {
-        return super.get();
     }
     
     @Override

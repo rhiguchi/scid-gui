@@ -1,4 +1,4 @@
-package jp.scid.gui.model;
+package jp.scid.gui.model.connector;
 
 import java.awt.EventQueue;
 
@@ -7,24 +7,26 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-public class DocumentTextConnector extends ValueModelConnector<String, Document> implements DocumentListener {
+import jp.scid.gui.model.MutableValueModel;
 
-    public DocumentTextConnector(ValueModel<String> target) {
+public class DocumentTextConnector extends ValueConnector<String, Document> implements DocumentListener {
+
+    public DocumentTextConnector(MutableValueModel<String> target) {
         super(target);
     }
 
-    private void updateLater() {
+    private void updateLater(final Document document) {
         Runnable task = new Runnable() {
             public void run() {
-                updateModelValue();
+                sourceChange(document);
             }
         };
         EventQueue.invokeLater(task);
     }
     
-    @Override public void insertUpdate(DocumentEvent e) { updateLater(); }
-    @Override public void removeUpdate(DocumentEvent e) { updateLater(); }
-    @Override public void changedUpdate(DocumentEvent e) { updateLater(); }
+    @Override public void insertUpdate(DocumentEvent e) { updateLater(e.getDocument()); }
+    @Override public void removeUpdate(DocumentEvent e) { updateLater(e.getDocument()); }
+    @Override public void changedUpdate(DocumentEvent e) { updateLater(e.getDocument()); }
 
     @Override
     protected String getModelValue(Document source) {
@@ -37,13 +39,12 @@ public class DocumentTextConnector extends ValueModelConnector<String, Document>
     }
 
     @Override
-    protected void installSourceChangeListener(Document source) {
+    protected void installUpdateListener(Document source) {
         source.addDocumentListener(this);
     }
 
     @Override
-    protected void uninstallSourceChangeListener(Document source) {
+    protected void uninstallUpdateListener(Document source) {
         source.removeDocumentListener(this);
     }
-    
 }

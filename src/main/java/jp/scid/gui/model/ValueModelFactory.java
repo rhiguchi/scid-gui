@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
 
+@Deprecated
 public class ValueModelFactory implements PropertyChangeListener {
     private final Map<String, PropertyConnector<?>> propertyModels;
     
@@ -20,7 +21,7 @@ public class ValueModelFactory implements PropertyChangeListener {
         if (propertyName == null) throw new IllegalArgumentException("propertyName must not be null");
         if (valueClass == null) throw new IllegalArgumentException("valueClass must not be null");
         
-        ValueModel<T> valueModel = ValueModels.newValueModel(initialValue);
+        MutableValueModel<T> valueModel = ValueModels.newValueModel(initialValue);
         PropertyConnector<T> conn = new PropertyConnector<T>(valueModel, valueClass);
         propertyModels.put(propertyName, conn);
         
@@ -38,15 +39,15 @@ public class ValueModelFactory implements PropertyChangeListener {
     
     private static class PropertyConnector<T> {
         private final Class<T> valueClass;
-        private final ValueModel<T> valueModel;
+        private final MutableValueModel<T> valueModel;
         
-        public PropertyConnector(ValueModel<T> valueModel, Class<T> valueClass) {
+        public PropertyConnector(MutableValueModel<T> valueModel, Class<T> valueClass) {
             this.valueModel = valueModel;
             this.valueClass = valueClass;
         }
 
         void setObjectValue(Object newValue) {
-            valueModel.setValue(valueClass.cast(newValue));
+            valueModel.set(valueClass.cast(newValue));
         }
     }
 }

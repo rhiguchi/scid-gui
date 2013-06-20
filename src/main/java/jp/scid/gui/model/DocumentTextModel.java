@@ -8,7 +8,7 @@ import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-public class DocumentTextModel extends WrappedValueModel<Document, String> {
+public class DocumentTextModel extends ValueModelAdapter<String, Document> {
     private final DocumentListener documentListener = new DocumentListener() {
         public void removeUpdate(DocumentEvent e) {
             updateValueLater();
@@ -16,33 +16,35 @@ public class DocumentTextModel extends WrappedValueModel<Document, String> {
         public void insertUpdate(DocumentEvent e) {
             updateValueLater();
         }
-        public void changedUpdate(DocumentEvent e) {}
+        public void changedUpdate(DocumentEvent e) {
+            // ignore
+        }
     };
     
     void updateValueLater() {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
-                updateValueFromSubject();
+                subjectValueChange();
             }
         });
     }
     
     public DocumentTextModel() {
-        setValue("");
+        super();
     }
     
     @Override
-    void listenTo(Document newSubject) {
+    void installUpdateListener(Document newSubject) {
         newSubject.addDocumentListener(documentListener);
     }
     
     @Override
-    void deafTo(Document newSubject) {
+    void uninstallUpdateListener(Document newSubject) {
         newSubject.removeDocumentListener(documentListener);
     }
     
     @Override
-    protected String getSubjectValue(Document document) {
+    protected String getValueFromSubject(Document document) {
         if (document == null)
             return "";
         
@@ -55,7 +57,7 @@ public class DocumentTextModel extends WrappedValueModel<Document, String> {
     }
 
     @Override
-    public void updateSubjectValue(Document document, String newValue) {
+    public void updateSubject(Document document, String newValue) {
         if (document == null)
             return;
         try {
@@ -70,5 +72,5 @@ public class DocumentTextModel extends WrappedValueModel<Document, String> {
         catch (BadLocationException e) {
             throw new IllegalStateException(e);
         }
-    }  
+    }
 }

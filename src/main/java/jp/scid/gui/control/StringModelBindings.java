@@ -1,9 +1,15 @@
 package jp.scid.gui.control;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.AbstractButton;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 import jp.scid.gui.control.BooleanModelBindings.ModelConnector;
 import jp.scid.gui.model.ValueModel;
@@ -22,14 +28,19 @@ public class StringModelBindings extends AbstractValueModelBindigs<String> {
             }
         });
     }
-
-    public ModelConnector bindToTextField(final JTextField field) {
+    
+    public ModelConnector bindToButtonText(final AbstractButton button) {
         return installModel(new AbstractPropertyConnector<String>() {
             @Override
             protected void valueChanged(String newValue) {
-                field.setText(newValue);
+                button.setText(newValue);
             }
         });
+    }
+
+    public ModelConnector bindToTextField(final JTextField field) {
+        TextComponentBinding binding = new TextComponentBinding(field);
+        return installModel(binding);
     }
 }
 
@@ -47,9 +58,38 @@ abstract class AbstractValueModelBindigs<T> {
     }
     
     abstract static class AbstractPropertyConnector<T> extends ValueChangeHandler<T> implements ModelConnector {
-        @Override
         public void dispose() {
             setModel(null);
+        }
+    }
+    
+    public static class TextComponentBinding extends AbstractPropertyConnector<String> {
+        private final JTextComponent component;
+        
+        public TextComponentBinding(JTextComponent component) {
+            if (component == null)
+                throw new IllegalArgumentException("component must not be null");
+            this.component = component;
+        }
+
+        @Override
+        protected void valueChanged(String newValue) {
+            component.setText(newValue);
+        }
+    }
+    
+    public static class FormattedTextFieldBinding extends AbstractPropertyConnector<Object> {
+        private final JFormattedTextField component;
+        
+        public FormattedTextFieldBinding(JFormattedTextField component) {
+            if (component == null)
+                throw new IllegalArgumentException("component must not be null");
+            this.component = component;
+        }
+        
+        @Override
+        protected void valueChanged(Object newValue) {
+            component.setValue(newValue);
         }
     }
     

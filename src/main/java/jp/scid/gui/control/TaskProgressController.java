@@ -5,14 +5,16 @@ import java.beans.PropertyChangeListener;
 
 import javax.swing.SwingWorker;
 
+import jp.scid.gui.model.MutableValueModel;
 import jp.scid.gui.model.ValueModel;
 import jp.scid.gui.model.ValueModels;
 
+@Deprecated
 public class TaskProgressController implements PropertyChangeListener {
-    protected final ValueModel<Boolean> running;
-    protected final ValueModel<Integer> progress;
+    protected final MutableValueModel<Boolean> running;
+    protected final MutableValueModel<Integer> progress;
     
-    public TaskProgressController(ValueModel<Boolean> running, ValueModel<Integer> progress) {
+    public TaskProgressController(MutableValueModel<Boolean> running, MutableValueModel<Integer> progress) {
         this.running = running;
         this.progress = progress;
     }
@@ -47,15 +49,15 @@ public class TaskProgressController implements PropertyChangeListener {
     protected void updateProgress(SwingWorker<?, ?> task) {
         int value = task.getProgress();
         
-        progress.setValue(value);
+        progress.set(value);
     }
     
     public boolean isRunning() {
-        return running.getValue();
+        return running.get();
     }
     
     public void setRunning(boolean newValue) {
-        running.setValue(newValue);
+        running.set(newValue);
     }
     
     public void listenTo(SwingWorker<?, ?> task) {

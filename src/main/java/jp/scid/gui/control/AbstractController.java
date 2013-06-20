@@ -20,16 +20,12 @@ public abstract class AbstractController<M> {
     final PropertyChangeListener modelPropertyChangeListener = new PropertyChangeListener() {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            if (getProperty() == null || getProperty().equals(evt.getPropertyName()))
-                processPropertyChange(getModel(), evt.getPropertyName());
+            processPropertyChange(getModel(), evt.getPropertyName());
         }
     };
 
     private M model = null;
     
-    @Deprecated
-    private String property = null;
-
     /**
      * モデルの変化監視を解除し、内部のモデル保持も解除する。
      */
@@ -75,43 +71,18 @@ public abstract class AbstractController<M> {
     }
 
     /**
-     * モデルを設定する。{@code property} に指定したプロパティのみ変化の通知する。
-     * 
-     * {@code property} が {@code null} の時は、全てのプロパティの変化の通知を行う。 
-     * @param newModel
-     * @param property 監視するプロパティ名。
-     */
-    @Deprecated
-    public void setModel(M newModel, String property) {
-        this.property = property;
-        setModel(newModel);
-    }
-    
-    /**
      * モデルが変化したときに処理を実行する。
      */
     protected void modelChange(M model) {
         processPropertyChange(model, null);
     }
     
-    @Deprecated
-    public String getProperty() {
-        return property;
-    }
-
     /**
      * モデルの変化監視を開始する。
      * @param model 変化を監視するモデル。
      */
     protected void listenTo(M model) {
-        if (model == null)
-            return;
-        if (model instanceof ValueModel) {
-            ((ValueModel<?>) model).addPropertyChangeListener(modelPropertyChangeListener);
-        }
-        else {
-            execute(model, "addPropertyChangeListener", modelPropertyChangeListener);
-        }
+        execute(model, "addPropertyChangeListener", modelPropertyChangeListener);
     }
     
     /**
@@ -119,15 +90,7 @@ public abstract class AbstractController<M> {
      * @param model 変化の監視を解除するモデル。
      */
     protected void deafTo(M model) {
-        if (model == null)
-            return;
-        
-        if (model instanceof ValueModel) {
-            ((ValueModel<?>) model).removePropertyChangeListener(modelPropertyChangeListener);
-        }
-        else {
-            execute(model, "removePropertyChangeListener", modelPropertyChangeListener);
-        }
+        execute(model, "removePropertyChangeListener", modelPropertyChangeListener);
     }
     
     /**

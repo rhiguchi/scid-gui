@@ -6,7 +6,11 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import jp.scid.gui.model.BeanModelFactory;
+import jp.scid.gui.model.MutableValueModel;
 import jp.scid.gui.model.ValueModel;
 
 public abstract class ComponentController<C extends Component> implements PropertyChangeListener {
@@ -74,7 +78,7 @@ public abstract class ComponentController<C extends Component> implements Proper
         }
     }
     
-    class PropertyModelChangeHandler implements PropertyChangeListener {
+    class PropertyModelChangeHandler implements ChangeListener {
         private final String propertyName;
         private final ValueModel<?> model;
         
@@ -84,23 +88,23 @@ public abstract class ComponentController<C extends Component> implements Proper
         }
         
         public void activate() {
-            updateProperty(propertyName, model.getValue());
-            model.addPropertyChangeListener(this);
+            updateProperty(propertyName, model.get());
+            model.addValueChangeListener(this);
         }
         
         public void release() {
-            model.removePropertyChangeListener(this);
+            model.removeValueChangeListener(this);
         }
         
         @SuppressWarnings("unchecked")
         public void setModelValue(Object newValue) {
-            ((ValueModel<Object>) model).setValue(newValue);
+            ((MutableValueModel<Object>) model).set(newValue);
         }
 
         @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            ValueModel<?> model = (ValueModel<?>) evt.getSource();
-            updateProperty(propertyName, model.getValue());
+        public void stateChanged(ChangeEvent e) {
+            ValueModel<?> model = (ValueModel<?>) e.getSource();
+            updateProperty(propertyName, model.get());
         }
     }
 }

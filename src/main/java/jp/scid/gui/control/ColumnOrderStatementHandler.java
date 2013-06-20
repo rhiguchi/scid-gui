@@ -14,22 +14,21 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import jp.scid.gui.model.ValueModel;
-import jp.scid.gui.model.ValueModels;
+import jp.scid.gui.model.MutableValueModel;
+import jp.scid.gui.model.SimpleValueModel;
 import ca.odell.glazedlists.gui.AdvancedTableFormat;
 
 public class ColumnOrderStatementHandler<E> extends ClickColumnSelectHandler {
     protected final Map<TableColumn, String> statementMap =
             new HashMap<TableColumn, String>();
     
-    private final ValueModel<TableColumn> selectedColumn =
-            ValueModels.newNullableValueModel();
+    private final MutableValueModel<TableColumn> selectedColumn = new SimpleValueModel<TableColumn>();
     
     private final AdvancedTableFormat<? super E> tableFormat;
     
-    private final ValueModel<Comparator<? super E>> comparator;
+    private final MutableValueModel<Comparator<? super E>> comparator;
     
-    public ColumnOrderStatementHandler(ValueModel<Comparator<? super E>> comparator,
+    public ColumnOrderStatementHandler(MutableValueModel<Comparator<? super E>> comparator,
             AdvancedTableFormat<? super E> tableFormat) {
         this.tableFormat = tableFormat;
         this.comparator = comparator;
@@ -62,13 +61,13 @@ public class ColumnOrderStatementHandler<E> extends ClickColumnSelectHandler {
     @Override
     public boolean isColumnSelected(TableColumn column) {
         if (column != null)
-            return column.equals(selectedColumn.getValue());
-        return column == selectedColumn.getValue();
+            return column.equals(selectedColumn.get());
+        return column == selectedColumn.get();
     }
     
     @Override
     public void setColumnSelected(TableColumn column) {
-        selectedColumn.setValue(column);
+        selectedColumn.set(column);
         
         updateCurrentStatement();
     }
@@ -141,16 +140,16 @@ public class ColumnOrderStatementHandler<E> extends ClickColumnSelectHandler {
     }
 
     public String getOrderStatement() {
-        if (selectedColumn.getValue() == null)
+        if (selectedColumn.get() == null)
             return "";
         
-        return getOrderStatement(selectedColumn.getValue());
+        return getOrderStatement(selectedColumn.get());
     }
     
     protected void updateCurrentStatement() {
         String statement = getOrderStatement();
         
-        comparator.setValue(getComparator(statement));
+        comparator.set(getComparator(statement));
     }
     
     protected Comparator<? super E> getComparator(final String statement) {

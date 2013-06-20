@@ -5,7 +5,7 @@ import javax.swing.event.ChangeListener;
 public interface ValueModel<T> {
     T get();
     
-    void addChangeListener(ChangeListener listener);
+    void addValueChangeListener(ChangeListener listener);
     
-    void removeChangeListener(ChangeListener listener);
+    void removeValueChangeListener(ChangeListener listener);
 }

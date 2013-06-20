@@ -10,34 +10,56 @@ public abstract class AbstractValueModel<T> implements ValueModel<T> {
     private List<ChangeListener> listeners = new LinkedList<ChangeListener>();
     
     @Override
-    public void addChangeListener(ChangeListener listener) {
+    public void addValueChangeListener(ChangeListener listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void removeChangeListener(ChangeListener listener) {
+    public void removeValueChangeListener(ChangeListener listener) {
         listeners.remove(listener);
     }
     
-    protected void fireStateChange() {
+    void fireValueChange(T oldValue, T newValue) {
         if (listeners.isEmpty())
             return;
         
-        ChangeEvent event = new ChangeEvent(this);
+        if (oldValue == null) {
+            if (newValue == null) {
+                return;
+            }
+        }
+        else if (oldValue.equals(newValue)) {
+            return;
+        }
+        
+        ChangeEvent event = new ValueChangeEvent(this, oldValue, newValue);
+        fireStateChange(event);
+    }
+
+    protected void fireStateChange(ChangeEvent event) {
         for (ChangeListener l: listeners) {
             l.stateChanged(event);
         }
     }
     
-    protected void fireValueChange(T oldValue, T newValue) {
-        if (oldValue != null) {
-            if (!oldValue.equals(newValue)) {
-                fireStateChange();
-            }
+    static class ValueChangeEvent extends ChangeEvent {
+        private final Object oldValue;
+        private final Object newValue;
+        
+        public ValueChangeEvent(Object source, Object oldValue, Object newValue) {
+            super(source);
+            
+            this.oldValue = oldValue;
+            this.newValue = newValue;
         }
-        else if (newValue != null) {
-            fireStateChange();
+        
+        public Object getOldValue() {
+            return oldValue;
         }
+        
+        public Object getNewValue() {
+            return newValue;
+        } 
     }
 }
 

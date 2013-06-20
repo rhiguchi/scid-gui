@@ -201,12 +201,12 @@ public class ListController<E> {
         
         public void setFilterText(ValueModel<String> newModel) {
             if (this.filterText != null) {
-                this.filterText.removeChangeListener(this);
+                this.filterText.removeValueChangeListener(this);
             }
             this.filterText = newModel;
             
             if (newModel != null) {
-                newModel.addChangeListener(this);
+                newModel.addValueChangeListener(this);
             }
         }
 

@@ -7,7 +7,7 @@ package jp.scid.gui.model;
  * @param <S> 主題値の型
  * @param <T> 変換された値の型。
  */
-public class TransformValueModel<S, T> extends AbstractProxyValueModel<S, T> {
+public class TransformValueModel<T, S> extends ValueModelValueAdapter<T, S> {
     private final Transformer<? super S, ? extends T> transformer;
     private final Transformer<? super T, ? extends S> reverseTransformer;
     
@@ -28,25 +28,10 @@ public class TransformValueModel<S, T> extends AbstractProxyValueModel<S, T> {
     }
     
     public TransformValueModel(
-            ValueModel<S> subject,
+            MutableValueModel<S> subject,
             Transformer<? super S, ? extends T> transformer,
             Transformer<? super T, ? extends S> reverseTransformer) {
         this(transformer, reverseTransformer);
-        
-        setSubject(subject);
-    }
-    
-    /**
-     * 主題値からこのモデルへの値の変換のみを許すモデルを作成する。
-     * @param transformer
-     */
-    public TransformValueModel(Transformer<? super S, ? extends T> transformer) {
-        this(transformer, null);
-    }
-    
-    public TransformValueModel(ValueModel<S> subject,
-            Transformer<? super S, ? extends T> transformer) {
-        this(transformer, null);
         
         setSubject(subject);
     }
@@ -71,11 +56,10 @@ public class TransformValueModel<S, T> extends AbstractProxyValueModel<S, T> {
 
     /**
      * 変換オブジェクトから主題値を変換して返す。
-     * {@inheritDoc}
      */
     @Override
-    T getSubjectValue(ValueModel<S> subject) {
-        return getTransformer().apply(subject.getValue());
+    T convertValue(S subjectValue) {
+        return getTransformer().apply(subjectValue);
     }
 
     /**
@@ -84,14 +68,9 @@ public class TransformValueModel<S, T> extends AbstractProxyValueModel<S, T> {
      * 逆変換ができない時はなにもしない。
      */
     @Override
-    void updateSubjectValue(ValueModel<S> subject, T newValue) {
-        final Transformer<? super T, ? extends S> tf = getReverseTransformer();
-        
-        if (tf == null)
-            return;
-        
-        S subjectValue = tf.apply(newValue);
-        subject.setValue(subjectValue);
+    protected void updateSubject(MutableValueModel<S> subject, T newValue) {
+        S subjectValue = getReverseTransformer().apply(newValue);
+        subject.set(subjectValue);
     }
     
     /**

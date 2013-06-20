@@ -6,7 +6,7 @@ package jp.scid.gui.model;
  *
  * @param <T> 値の型。
  */
-public class SimpleValueModel<T> extends AbstractValueModel<T> {
+public class SimpleValueModel<T> extends AbstractMutableValueModel<T> {
     private T value = null;
     
     /**
@@ -21,14 +21,6 @@ public class SimpleValueModel<T> extends AbstractValueModel<T> {
      */
     public SimpleValueModel(T initialValue) {
         this.value = initialValue;
-    }
-
-    public T getValue() {
-        return value;
-    }
-
-    public void setValue(T newValue) {
-        firePropertyChange(value, value = newValue);
     }
 
     @Override

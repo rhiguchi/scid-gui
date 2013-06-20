@@ -12,7 +12,7 @@ import javax.swing.JToggleButton;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import jp.scid.gui.model.ValueModel;
+import jp.scid.gui.model.MutableValueModel;
 import jp.scid.gui.model.ValueModels;
 
 public class TableColumnEditor {
@@ -21,10 +21,7 @@ public class TableColumnEditor {
     final TableColumnModel columnModel;
     
     /** visibility model for dialog */
-    final ValueModel<Boolean> dialogVisibled = ValueModels.newBooleanModel(false);
-    
-    /** Binding for dialog visibility */
-    final BooleanPropertyBinder dialogVisibledBinder = new BooleanPropertyBinder(dialogVisibled);
+    final MutableValueModel<Boolean> dialogVisibled = ValueModels.newBooleanModel(false);
     
     public TableColumnEditor(TableColumnModel columnModel) {
         this.columnModel = columnModel;
@@ -63,7 +60,7 @@ public class TableColumnEditor {
             e.getValue().setSelected(selected);
         }
         
-        dialogVisibled.setValue(true);
+        dialogVisibled.set(true);
     }
     
     void commitEditing() {
@@ -84,11 +81,11 @@ public class TableColumnEditor {
     
     public void edit() {
         reloadButtonModel();
-        dialogVisibled.setValue(false);        
+        dialogVisibled.set(false);        
     }
     
     public void hide() {
-        dialogVisibled.setValue(false);        
+        dialogVisibled.set(false);        
     }
     
     // Bindings
@@ -109,7 +106,7 @@ public class TableColumnEditor {
     }
     
     public void bindDialog(JDialog dialog) {
-        dialogVisibledBinder.bindVisible(dialog);
+        ComponentPropertyConnector.connect(dialogVisibled, dialog, "visible");
     }
     
     // Actions

@@ -12,17 +12,29 @@ package jp.scid.gui.model;
  * @param <S> 主題値。
  * @param <T> 提供する値の型。
  */
-public abstract class WrappedValueModel<S, T> extends SimpleValueModel<T> {
+public abstract class ValueModelAdapter<T, S> extends AbstractValueModel<T> implements MutableValueModel<T> {
     private S subject = null;
     
-    WrappedValueModel() {
+    protected ValueModelAdapter() {
     }
     
-    public WrappedValueModel(S subject) {
+    protected ValueModelAdapter(S subject) {
         this();
-        setSubject(subject);
+        if (subject == null) throw new IllegalArgumentException("subject must not be null");
+        
+        installUpdateListener(subject);
+    }
+    
+    @Override
+    public T get() {
+        return getSubjectValue();
     }
 
+    @Override
+    public void set(T newValue) {
+        updateSubject(getSubject(), newValue);
+    }
+    
     /**
      * 主題値を取得する。
      * 
@@ -30,13 +42,6 @@ public abstract class WrappedValueModel<S, T> extends SimpleValueModel<T> {
      */
     public S getSubject() {
         return subject;
-    }
-    
-    @Override
-    public void setValue(T newValue) {
-        super.setValue(newValue);
-        
-        updateSubject();
     }
     
     /**
@@ -48,14 +53,22 @@ public abstract class WrappedValueModel<S, T> extends SimpleValueModel<T> {
      * @param newSubject 新しい主題値。
      */
     public void setSubject(S newSubject) {
-        if (this.subject != null)
-            deafTo(this.subject);
+        T oldValue = null;
+        
+        if (this.subject != null) {
+            uninstallUpdateListener(this.subject);
+            oldValue = getValueFromSubject(this.subject);
+        }
         
         this.subject = newSubject;
-        if (newSubject != null)
-            listenTo(newSubject);
         
-        updateValueFromSubject();
+        T newValue = null;
+        if (newSubject != null) {
+            newValue = getValueFromSubject(newSubject);
+            installUpdateListener(newSubject);
+        }
+        
+        fireValueChange(oldValue, newValue);
     }
     
     /**
@@ -64,39 +77,16 @@ public abstract class WrappedValueModel<S, T> extends SimpleValueModel<T> {
      * 主題値が {@code null} の時は、新しい値として {@code null} がこのモデルに適用される。
      * それ以外は、実装によって異なる値がこのモデルに適用される。
      * 
-     * @see #getSubject()
-     * @see #setValue(Object)
+     * @see #getSubjectValue()
      */
-    public void updateValueFromSubject() {
-        S subj = getSubject();
-        if (subj == null)
-            return;
-        
-        final T newValue = getSubjectValue(subj);
-        
-        // 現在値の更新は updateSubject を呼び出すが、主題値によっては
-        // 複数の値変換（delete & insert イベント）を呼び出すことがあるので、
-        // 現在の値と主題の値が異なる時のみに、現在の値の更新を行う。
-        T currentValue = getValue();
-        
-        if (currentValue != null && !currentValue.equals(newValue) ||
-                currentValue == null && newValue != null) {
-            setValue(newValue);
-        }
+    protected void subjectValueChange() {
+        T newValue = getSubjectValue();
+        updateSubject(getSubject(), newValue);
     }
-    
-    /**
-     * 主題値に、このモデルの値を適用する。
-     * 
-     * このモデルが保持している値が {@code null} の時は、主題値の更新は行われない。
-     * 
-     * @see #getValue()
-     */
-    protected void updateSubject() {
-        S sub = getSubject();
-        T myValue = getValue();
-        if (sub != null && myValue != null)
-            updateSubjectValue(sub, myValue);
+
+    private T getSubjectValue() {
+        S subj = getSubject();
+        return getValueFromSubject(subj);
     }
     
     /**
@@ -107,7 +97,7 @@ public abstract class WrappedValueModel<S, T> extends SimpleValueModel<T> {
      * @param subject 主題値。
      * @return 変換された値。
      */
-    abstract T getSubjectValue(S subject);
+    protected abstract T getValueFromSubject(S subject);
     
     /**
      * 主題値を変更する。
@@ -116,19 +106,19 @@ public abstract class WrappedValueModel<S, T> extends SimpleValueModel<T> {
      * @param subject 新しい値が適用される主題値。
      * @param newValue 適用する値。
      */
-    abstract void updateSubjectValue(S subject, T newValue);
+    protected abstract void updateSubject(S subject, T newValue);
     
     /**
      * 主題値の変化を監視する処理を行う。
      * 
-     * @param newSubject あたらしい主題値。
+     * @param subject あたらしい主題値。
      */
-    abstract void listenTo(S newSubject);
+    abstract void installUpdateListener(S subject);
     
     /**
      * 主題値の監視をやめる処理を行う。
      * 
-     * @param newSubject 監視をやめる主題値。
+     * @param subject 監視をやめる主題値。
      */
-    abstract void deafTo(S newSubject);
+    abstract void uninstallUpdateListener(S subject);
 }

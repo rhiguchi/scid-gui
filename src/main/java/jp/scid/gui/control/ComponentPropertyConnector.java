@@ -2,6 +2,7 @@ package jp.scid.gui.control;
 
 import java.awt.Component;
 import java.awt.EventQueue;
+import java.lang.reflect.InvocationTargetException;
 
 import jp.scid.gui.model.ValueModel;
 
@@ -24,27 +25,25 @@ public class ComponentPropertyConnector<C extends Component, V> extends ViewValu
     }
     
     @Override
-    protected void processPropertyChange(ValueModel<V> model, String property) {
-        if (property == null || property.equals("value")) {
-            final V value = model.getValue();
-            
-            Runnable updater = new Runnable() {
-                public void run() {
-                    updateView(getView(), value);
-                }
-            };
-            
-            if (EventQueue.isDispatchThread()) {
-                updater.run();
+    protected void updateView(final C target, final V modelValue) {
+        Runnable updater = new Runnable() {
+            public void run() {
+                AbstractController.execute(
+                        target, AbstractController.getSetterName(propertyName), modelValue);
             }
-            else {
-                EventQueue.invokeLater(updater);
-            }
+        };
+        
+        if (EventQueue.isDispatchThread()) {
+            updater.run();
         }
-    }
-    
-    @Override
-    protected void updateView(C target, V modelValue) {
-        execute(target, getSetterName(propertyName), modelValue);
+        else try {
+            EventQueue.invokeAndWait(updater);
+        }
+        catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
+        catch (InvocationTargetException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

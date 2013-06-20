@@ -3,7 +3,6 @@ package jp.scid.gui.control;
 import javax.swing.AbstractButton;
 
 import jp.scid.gui.model.ValueModel;
-import jp.scid.gui.model.ValueModels;
 
 /**
  * 値モデルをビューに適用する処理の抽象実装。
@@ -12,7 +11,7 @@ import jp.scid.gui.model.ValueModels;
  * @param <T> ビュークラス型
  * @param <V> 値型
  */
-public abstract class ViewValueConnector<T, V> extends AbstractController<ValueModel<V>> {
+public abstract class ViewValueConnector<T, V> extends ValueChangeHandler<V> {
     private final T view;
     
     public ViewValueConnector(T targetView) {
@@ -31,24 +30,10 @@ public abstract class ViewValueConnector<T, V> extends AbstractController<ValueM
     public T getView() {
         return view;
     }
-    
-    @Deprecated
-    public void setModelValue(V newValue) {
-        ValueModel<V> valueModel = getModel();
-        if (valueModel == null) {
-            valueModel = ValueModels.newValueModel(newValue);
-            setModel(valueModel);
-        }
-        else {
-            valueModel.setValue(newValue);
-        }
-    }
 
     @Override
-    protected void processPropertyChange(ValueModel<V> model, String property) {
-        V value = model.getValue();
-
-        updateView(getView(), value);
+    protected void valueChanged(V newValue) {
+        updateView(getView(), newValue);
     }
     
     abstract protected void updateView(T target, V modelValue);
