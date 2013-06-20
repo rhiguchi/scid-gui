@@ -28,9 +28,17 @@
 	<configurations defaultconf="default">
 		<conf name="default"/>
 		<conf name="compile" extends="default"/>
+		<conf name="source"/>
+        <conf name="javadoc" extends="compile"/>
 		<conf name="test" extends="default" visibility="private"/>
 	</configurations>
 	
+    <publications>
+        <artifact />
+        <artifact name="scid-gui-sources" type="source" ext="jar" conf="source"/>
+        <artifact name="scid-gui-javadocs" type="javadoc" ext="jar" conf="javadoc"/>
+    </publications>
+    
 	<dependencies>
 	    <dependency org="net.java.dev.glazedlists" name="glazedlists_java15" rev="1.8.0" conf="compile->default"/>
 		<dependency org="junit" name="junit" rev="4.10" conf="test->default"/>
