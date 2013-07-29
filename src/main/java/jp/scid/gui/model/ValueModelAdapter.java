@@ -82,7 +82,8 @@ public abstract class ValueModelAdapter<T, S> extends AbstractValueModel<T> impl
      */
     protected void subjectValueChange() {
         T newValue = getSubjectValue();
-        updateSubject(getSubject(), newValue);
+        // 古い値を保持していない
+        fireValueChange(null, newValue);
     }
 
     private T getSubjectValue() {
