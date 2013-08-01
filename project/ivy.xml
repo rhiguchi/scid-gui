@@ -30,7 +30,7 @@
 		<conf name="compile" extends="default"/>
 		<conf name="source"/>
         <conf name="javadoc" extends="compile"/>
-		<conf name="test" extends="default" visibility="private"/>
+		<conf name="test" extends="compile" visibility="private"/>
 	</configurations>
 	
     <publications>
