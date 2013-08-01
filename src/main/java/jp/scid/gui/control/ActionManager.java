@@ -6,7 +6,10 @@ import java.awt.event.ActionEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.ListResourceBundle;
 import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +20,7 @@ public class ActionManager {
     private static final Logger logger = Logger.getLogger(ActionManager.class.getName());
             
     private final Object controller;
+    private final ResourceBundle resourceBundle;
     
     private final Map<String, Method> methodMap;
     private boolean methodMapInitialized = false;
@@ -26,6 +30,7 @@ public class ActionManager {
         if (controller == null)
             throw new IllegalArgumentException("controller must not be null");
         this.controller = controller;
+        resourceBundle = getResourceBundle(controller.getClass());
         
         methodMap = new HashMap<String, Method>();
     }
@@ -43,6 +48,9 @@ public class ActionManager {
         }
         else {
             action = new ActionEntry(actionMethod, methodName);
+            // resources
+            ActionProperty.NAME.applyFrom(action, resourceBundle, methodName);
+            ActionProperty.ACCELERATOR_KEY.applyFrom(action, resourceBundle, methodName);
         }
         
         return action;
@@ -79,6 +87,49 @@ public class ActionManager {
         @Override
         public final void setEnabled(boolean newValue) {
             super.setEnabled(false);
+        }
+    }
+
+    private static ResourceBundle getResourceBundle(Class<?> cls) {
+        ResourceBundle r;
+        try {
+            r = ResourceBundle.getBundle(cls.getName());
+        }
+        catch (MissingResourceException e) {
+            r = new EmptyResource();
+        }
+        return r;
+    }
+    
+    private static class EmptyResource extends ListResourceBundle {
+        @Override
+        protected Object[][] getContents() {
+            return new Object[0][0];
+        }
+    }
+    
+    enum ActionProperty {
+        NAME(Action.NAME),
+        ACCELERATOR_KEY(Action.ACCELERATOR_KEY),
+        ;
+        
+        private final String actionPropertyKey;
+        private final String resourceKey;
+        
+        private ActionProperty(String actionPropertyKey) {
+            this.actionPropertyKey = actionPropertyKey;
+            this.resourceKey = name().toLowerCase();
+        }
+        
+        public void applyFrom(Action action, ResourceBundle resource, String actionName) {
+            String actionNameKey = resourceKey(actionName);
+            if (resource.containsKey(actionNameKey)) {
+                action.putValue(actionPropertyKey, resource.getString(actionNameKey));
+            }
+        }
+
+        private String resourceKey(String actionName) {
+            return "action." + actionName + "." + resourceKey;
         }
     }
     
