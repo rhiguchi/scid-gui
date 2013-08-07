@@ -1,28 +1,27 @@
 package jp.scid.gui.control;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 import javax.swing.JFormattedTextField;
 
 import jp.scid.gui.model.MutableValueModel;
 import jp.scid.gui.model.ValueModels;
 import jp.scid.gui.model.ValueProxy;
-import jp.scid.gui.model.connector.BeanPropertyConnector;
 
 public class ValueController<T> {
     private final ValueProxy<T> modelHolder;
 
-    private final Class<? extends T> valueClass;
-    
-    protected ValueController(MutableValueModel<T> model, Class<? extends T> valueClass) {
+    protected ValueController(MutableValueModel<T> model) {
         modelHolder = new ValueProxy<T>(model);
-        this.valueClass = valueClass;
     }
     
-    protected ValueController(Class<? extends T> valueClass) {
-        this(ValueModels.<T>newNullableValueModel(), valueClass);
+    public static <T> ValueController<T> create(MutableValueModel<T> model) {
+        return new ValueController<T>(model);
     }
     
-    public static <T> ValueController<T> create(MutableValueModel<T> model, Class<? extends T> valueClass) {
-        return new ValueController<T>(model, valueClass);
+    public static <T> ValueController<T> create(T initialValue) {
+        return new ValueController<T>(ValueModels.newValueModel(initialValue));
     }
     
     public T getValue() {
@@ -41,10 +40,28 @@ public class ValueController<T> {
         modelHolder.setSubject(newSubject);
     }
     
-    public void bindFormattedTextField(JFormattedTextField field) {
+    public void bindFormattedTextField(JFormattedTextField field, Class<? extends T> valueClass) {
         // model to field
         new FormattedTextValueConnector<T>(field).setModel(modelHolder);
         // value of field to model
-        BeanPropertyConnector.create(modelHolder, "value", valueClass).setSource(field);
+        new FormattedTextFieldValueChangeHandler(valueClass).installTo(field);
+    }
+    
+    private class FormattedTextFieldValueChangeHandler implements PropertyChangeListener {
+        private final Class<? extends T> valueClass;
+        
+        public FormattedTextFieldValueChangeHandler(Class<? extends T> valueClass) {
+            this.valueClass = valueClass;
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent e) {
+            T newValue = valueClass.cast(e.getNewValue());
+            setValue(newValue);
+        }
+        
+        public void installTo(JFormattedTextField field) {
+            field.addPropertyChangeListener("value", this);
+        }
     }
 }
